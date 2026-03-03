@@ -1,8 +1,6 @@
 ﻿#include <iostream>
 #include <cstdlib>
 using namespace std;
-//edit frow Andrew
-///maksim
 int main()
 {
     int choice;
@@ -17,7 +15,6 @@ int main()
         cout << "Choose:   ";
 
         cin >> choice;
-        //Нинтендо свичч
         switch (choice)
         {
         case 1:
