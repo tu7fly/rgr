@@ -1,77 +1,72 @@
-﻿// Подключаем библиотеку OpenGL через freeglut
-#include <GL/glut.h>
-
-// Для генерации случайных чисел
+﻿#include <GL/glut.h>
 #include <cstdlib>
-
-// Для функций sin() и cos()
 #include <cmath>
+#include <cstdio>
 
 // ---------------- НАСТРОЙКИ ----------------
 
-// Количество рыбок
 const int FISH_COUNT = 3;
-
-// Количество пузырьков
 const int BUBBLE_COUNT = 12;
 
 // ---------------- ПАРАМЕТРЫ РЫБОК ----------------
 
-// Координаты по X
-float fishX[FISH_COUNT] = { -0.6f, 0.3f, 0.0f };
+float fishX[FISH_COUNT] = {-0.6f, 0.3f, 0.0f};
+float fishY[FISH_COUNT] = {0.3f, -0.2f, 0.0f};
+float fishSpeed[FISH_COUNT] = {0.008f, -0.006f, 0.01f};
 
-// Координаты по Y
-float fishY[FISH_COUNT] = { 0.3f, -0.2f, 0.0f };
-
-// Скорости движения
-float fishSpeed[FISH_COUNT] = { 0.008f, -0.006f, 0.01f };
-
-// Цвет каждой рыбки (R, G, B)
 float fishColor[FISH_COUNT][3] =
-{
-    {1.0f, 0.5f, 0.0f},  // оранжевая
-    {0.2f, 0.8f, 0.3f},  // зелёная
-    {0.8f, 0.3f, 0.9f}   // фиолетовая
-};
+    {
+        {1.0f, 0.5f, 0.0f},
+        {0.2f, 0.8f, 0.3f},
+        {0.8f, 0.3f, 0.9f}};
+
+// 🔥 Счётчики ударов для каждой рыбы
+int fishHits[FISH_COUNT] = {0, 0, 0};
 
 // ---------------- ПАРАМЕТРЫ ПУЗЫРЬКОВ ----------------
 
 float bubbleX[BUBBLE_COUNT];
 float bubbleY[BUBBLE_COUNT];
 
-// ---------------- ФУНКЦИЯ РИСОВАНИЯ КРУГА ----------------
+// ---------------- РИСОВАНИЕ КРУГА ----------------
+
 void drawCircle(float x, float y, float r)
 {
     glBegin(GL_POLYGON);
-
     for (int i = 0; i < 30; i++)
     {
         float angle = 2.0f * 3.14159f * i / 30;
-
-        glVertex2f(
-            x + r * cos(angle),
-            y + r * sin(angle)
-        );
+        glVertex2f(x + r * cos(angle), y + r * sin(angle));
     }
-
     glEnd();
 }
 
-// ---------------- ФУНКЦИЯ РИСОВАНИЯ РЫБКИ ----------------
+// ---------------- РИСОВАНИЕ ТЕКСТА ----------------
+
+void drawText(float x, float y, const char *text)
+{
+    glRasterPos2f(x, y);
+    while (*text)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *text);
+        text++;
+    }
+}
+
+// ---------------- РИСОВАНИЕ РЫБЫ ----------------
+
 void drawFish(float x, float y, bool moveRight, int index)
 {
-    glPushMatrix();             // сохраняем текущее состояние
-    glTranslatef(x, y, 0);      // перемещаем рыбку
+    glPushMatrix();
+    glTranslatef(x, y, 0);
 
     if (!moveRight)
-        glScalef(-1, 1, 1);     // отражение при движении влево
+        glScalef(-1, 1, 1);
 
-    // Цвет рыбки
     glColor3f(
         fishColor[index][0],
         fishColor[index][1],
-        fishColor[index][2]
-    );
+        fishColor[index][2]);
 
     // Тело
     glBegin(GL_POLYGON);
@@ -92,10 +87,11 @@ void drawFish(float x, float y, bool moveRight, int index)
     glColor3f(0, 0, 0);
     drawCircle(0.05f, 0.02f, 0.01f);
 
-    glPopMatrix();              // возвращаем состояние
+    glPopMatrix();
 }
 
-// ---------------- ФУНКЦИЯ ОТРИСОВКИ ----------------
+// ---------------- ОТРИСОВКА ----------------
+
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -109,41 +105,50 @@ void display()
     glVertex2f(-0.9f, 0.6f);
     glEnd();
 
-    // Рисуем рыбок
+    // Рисуем рыб
     for (int i = 0; i < FISH_COUNT; i++)
     {
-        drawFish(
-            fishX[i],
-            fishY[i],
-            fishSpeed[i] > 0,
-            i
-        );
+        drawFish(fishX[i], fishY[i], fishSpeed[i] > 0, i);
     }
 
-    // Рисуем пузырьки
+    // Пузырьки
     glColor3f(0.8f, 0.9f, 1.0f);
     for (int i = 0; i < BUBBLE_COUNT; i++)
     {
         drawCircle(bubbleX[i], bubbleY[i], 0.02f);
     }
 
+    // 🔥 Отображение счётчиков
+    glColor3f(0, 0, 0);
+
+    char buffer[50];
+
+    for (int i = 0; i < FISH_COUNT; i++)
+    {
+        sprintf_s(buffer, "Fish %d hits: %d", i + 1, fishHits[i]);
+        drawText(-0.85f, 0.7f - i * 0.08f, buffer);
+    }
+
     glutSwapBuffers();
 }
 
-// ---------------- ФУНКЦИЯ АНИМАЦИИ ----------------
+// ---------------- АНИМАЦИЯ ----------------
+
 void timer(int)
 {
-    // Движение рыб
     for (int i = 0; i < FISH_COUNT; i++)
     {
         fishX[i] += fishSpeed[i];
 
-        // Отскок от стен
+        // Если удар о стену
         if (fishX[i] > 0.85f || fishX[i] < -0.85f)
+        {
             fishSpeed[i] = -fishSpeed[i];
+            fishHits[i]++; // 🔥 увеличиваем счётчик конкретной рыбы
+        }
     }
 
-    // Движение пузырьков вверх
+    // Движение пузырьков
     for (int i = 0; i < BUBBLE_COUNT; i++)
     {
         bubbleY[i] += 0.01f;
@@ -156,18 +161,15 @@ void timer(int)
     glutTimerFunc(30, timer, 0);
 }
 
-// ---------------- ГЛАВНАЯ ФУНКЦИЯ ----------------
-int main(int argc, char** argv)
+// ---------------- MAIN ----------------
+
+int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
-
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-
     glutInitWindowSize(800, 600);
+    glutCreateWindow("Аквариум со счетчиками");
 
-    glutCreateWindow("Аквариум с рыбками");
-
-    // Цвет воды
     glClearColor(0.6f, 0.85f, 1.0f, 1.0f);
 
     // Инициализация пузырьков
@@ -179,7 +181,6 @@ int main(int argc, char** argv)
 
     glutDisplayFunc(display);
     glutTimerFunc(30, timer, 0);
-
     glutMainLoop();
 
     return 0;
