@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <string>
-
+#include <iostream>
 // ---------------- НАСТРОЙКИ ----------------
 
 const int FISH_COUNT = 3;
