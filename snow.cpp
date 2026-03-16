@@ -7,7 +7,7 @@
 #define WIDTH 80
 #define HEIGHT 60
 #define CELL 10      // ðàçìåð êëåòêè
-#define TIMER 250    // çàäåðæêà àíèìàöèè (ìñ)
+#define TIMER 100    // çàäåðæêà àíèìàöèè (ìñ)
 
 int field[HEIGHT][WIDTH];
 
